@@ -59,6 +59,45 @@
           "legendFormat": "heap used"
         }
       ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "LLM tokens per request (p50/p95)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "llm_tokens_per_request_tokens{quantile=~\"0.5|0.95\"}",
+          "legendFormat": "{{type}} p{{quantile}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "LLM avg tokens per request",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (type) (rate(llm_tokens_per_request_tokens_sum[5m])) / sum by (type) (rate(llm_tokens_per_request_tokens_count[5m]))",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "LLM cumulative tokens",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (gen_ai_token_type) (gen_ai_client_token_usage_total)",
+          "legendFormat": "{{gen_ai_token_type}}"
+        }
+      ]
     }
   ]
 }
