@@ -1,0 +1,10 @@
+spring:
+  # Migration-only run: don't start the web server.
+  main:
+    web-application-type: none
+  # Only Postgres is needed for migration; skip the other compose services.
+  docker:
+    compose:
+      lifecycle-management: start-only
+  flyway:
+    enabled: true
