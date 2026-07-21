@@ -22,8 +22,15 @@ spring:
     ollama:
       init:
         pull-model-strategy: never
+  # OTLP log export has no "enabled" flag — it activates whenever an endpoint is
+  # set (inherited from application.yml). Loki isn't running here, so exclude the
+  # exporter auto-config to avoid failed-export noise. (Console logging is unaffected.)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.opentelemetry.autoconfigure.logging.otlp.OtlpLoggingAutoConfiguration
 management:
   # No Tempo running here, and a one-shot migration isn't worth tracing;
   # disabling avoids failed OTLP-export noise during the brief context.
   tracing:
-    enabled: false
+    export:
+      enabled: false

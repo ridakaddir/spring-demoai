@@ -73,6 +73,20 @@
 			</exclusions>
 		</dependency>
 		<!--
+			OTLP LOG export to Grafana Loki. The starter above ships the trace
+			exporter but NOT the OpenTelemetry Logback appender, which Boot needs
+			to bridge Logback -> OTLP logs. This artifact lives in the OTel
+			"instrumentation" (alpha) channel and is not managed by the Boot BOM,
+			so the version is explicit; it aligns with opentelemetry ${opentelemetry
+			core} 1.62.0 (Boot pins the transitive core deps). Once on the classpath
+			Boot auto-installs the appender when the OTLP log endpoint is set.
+		-->
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-logback-appender-1.0</artifactId>
+			<version>2.26.0-alpha</version>
+		</dependency>
+		<!--
 			Actuator is declared explicitly (it was only transitive) so the
 			ObservationRegistry and /actuator endpoints are reliably present.
 			Spring AI's gen_ai.* observations and Micrometer metrics only

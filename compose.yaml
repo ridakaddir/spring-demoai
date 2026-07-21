@@ -33,6 +33,14 @@ services:
       - '9090:9090'
     volumes:
       - './monitoring/prometheus.yml:/etc/prometheus/prometheus.yml'
+  loki:
+    image: 'grafana/loki:latest'
+    profiles: ['full']   # not needed by the migrate profile (Postgres-only)
+    command: ['-config.file=/etc/loki/loki-config.yaml']
+    ports:
+      - '3100:3100'   # the host app pushes logs here via OTLP (/otlp/v1/logs)
+    volumes:
+      - './monitoring/loki-config.yaml:/etc/loki/loki-config.yaml'
   grafana:
     image: 'grafana/grafana:latest'
     profiles: ['full']   # not needed by the migrate profile (Postgres-only)

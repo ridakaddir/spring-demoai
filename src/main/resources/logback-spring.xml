@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Keeps Spring Boot's default console logging AND adds the OpenTelemetry Logback
+  appender so log records are exported via OTLP to Loki. Boot builds the OTLP log
+  exporter (management.opentelemetry.logging.export.otlp.endpoint) but does not
+  attach this appender itself; OpenTelemetryAppenderConfig installs the SDK into it.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <appender name="OpenTelemetry"
+              class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+        <captureExperimentalAttributes>true</captureExperimentalAttributes>
+        <captureCodeAttributes>true</captureCodeAttributes>
+        <captureMdcAttributes>*</captureMdcAttributes>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="OpenTelemetry"/>
+    </root>
+</configuration>

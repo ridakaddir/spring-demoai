@@ -21,11 +21,14 @@ spring:
         model: llama3.2
         temperature: 0.7
 
-# Observability: traces -> Grafana Tempo (via OTLP), metrics -> Prometheus/Grafana.
+# Observability, all via OTLP into the Grafana stack:
+#   traces  -> Tempo (4318), metrics -> Prometheus/Grafana (scrape), logs -> Loki (3100).
 # Spring AI's gen_ai.* observations (chat spans + token-usage metrics) and
 # Spring Modulith's module-boundary spans activate automatically from the
 # ObservationRegistry once this block is present. Prompt/completion content
 # capture is left OFF (spring.ai.chat.observations.log-* default to false).
+# OTLP log export auto-installs the OpenTelemetry Logback appender and injects
+# trace_id/span_id into every log record, so Loki logs correlate to Tempo traces.
 management:
   tracing:
     sampling:
@@ -35,6 +38,10 @@ management:
       export:
         otlp:
           endpoint: http://localhost:4318/v1/traces   # Tempo OTLP/HTTP receiver
+    logging:
+      export:
+        otlp:
+          endpoint: http://localhost:3100/otlp/v1/logs  # Loki OTLP log receiver
   endpoints:
     web:
       exposure:
