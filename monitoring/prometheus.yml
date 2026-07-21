@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # The Spring Boot app runs on the host (started via Boot docker-compose),
+  # not inside this compose network. On Docker Desktop / macOS the container
+  # reaches the host through host.docker.internal.
+  - job_name: demoai
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8080']

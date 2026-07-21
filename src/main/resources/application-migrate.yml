@@ -2,9 +2,28 @@ spring:
   # Migration-only run: don't start the web server.
   main:
     web-application-type: none
-  # Only Postgres is needed for migration; skip the other compose services.
+  # Only Postgres is needed for migration. Postgres is the sole unprofiled
+  # service in compose.yaml, and this run leaves the "full" compose profile
+  # inactive, so ollama/tempo/prometheus/grafana are not started.
   docker:
     compose:
-      lifecycle-management: start-only
+      # Override the base "start-only": this one-shot run must STOP the container
+      # it started when it exits. Otherwise a leftover (running) Postgres makes the
+      # next normal run hit "services already running, skipping startup" and never
+      # start ollama/tempo/prometheus/grafana. start-and-stop stops (not removes)
+      # the container, so the migrated schema survives for the next run.
+      lifecycle-management: start-and-stop
+      profiles:
+        active: ''                       # clear the base "full" profile -> Postgres only
   flyway:
     enabled: true
+  # No Ollama container in this profile — don't try to pull the model at startup.
+  ai:
+    ollama:
+      init:
+        pull-model-strategy: never
+management:
+  # No Tempo running here, and a one-shot migration isn't worth tracing;
+  # disabling avoids failed OTLP-export noise during the brief context.
+  tracing:
+    enabled: false

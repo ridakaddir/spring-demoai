@@ -4,6 +4,8 @@ spring:
   docker:
     compose:
       lifecycle-management: start-only
+      profiles:
+        active: full          # normal run: also start ollama + tempo + prometheus + grafana
   flyway:
     # Spring Modulith's JDBC starter creates its own event_publication table,
     # so on the very first run Flyway finds a non-empty "public" schema without a
@@ -18,4 +20,27 @@ spring:
       chat:
         model: llama3.2
         temperature: 0.7
+
+# Observability: traces -> Grafana Tempo (via OTLP), metrics -> Prometheus/Grafana.
+# Spring AI's gen_ai.* observations (chat spans + token-usage metrics) and
+# Spring Modulith's module-boundary spans activate automatically from the
+# ObservationRegistry once this block is present. Prompt/completion content
+# capture is left OFF (spring.ai.chat.observations.log-* default to false).
+management:
+  tracing:
+    sampling:
+      probability: 1.0          # export 100% of traces (default is 0.1)
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces   # Tempo OTLP/HTTP receiver
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
         

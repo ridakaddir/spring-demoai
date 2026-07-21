@@ -1,6 +1,7 @@
 services:
   ollama:
     image: 'ollama/ollama:latest'
+    profiles: ['full']   # not needed by the migrate profile (Postgres-only)
     ports:
       - '11434'
   postgres:
@@ -11,7 +12,35 @@ services:
       - 'POSTGRES_USER=myuser'
     ports:
       - '5432:5432'
-  zipkin:
-    image: 'openzipkin/zipkin:latest'
+  tempo:
+    image: 'grafana/tempo:latest'
+    profiles: ['full']   # not needed by the migrate profile (Postgres-only)
+    command: ['-config.file=/etc/tempo/tempo.yaml']
     ports:
-      - '9411:9411'
+      - '4318:4318'   # OTLP/HTTP — the host app sends spans here
+      - '3200:3200'   # Tempo query API — Grafana reads from here
+    volumes:
+      - './monitoring/tempo.yaml:/etc/tempo/tempo.yaml'
+    labels:
+      # Don't block app startup on Tempo's readiness — it's a fire-and-forget
+      # trace sink. Spans buffer and flow once Tempo is up. (Also avoids Boot's
+      # TCP probe against the OTLP port.)
+      org.springframework.boot.readiness-check.tcp.disable: 'true'
+  prometheus:
+    image: 'prom/prometheus:latest'
+    profiles: ['full']   # not needed by the migrate profile (Postgres-only)
+    ports:
+      - '9090:9090'
+    volumes:
+      - './monitoring/prometheus.yml:/etc/prometheus/prometheus.yml'
+  grafana:
+    image: 'grafana/grafana:latest'
+    profiles: ['full']   # not needed by the migrate profile (Postgres-only)
+    ports:
+      - '3000:3000'
+    environment:
+      - 'GF_AUTH_ANONYMOUS_ENABLED=true'
+      - 'GF_AUTH_ANONYMOUS_ORG_ROLE=Admin'
+      - 'GF_AUTH_DISABLE_LOGIN_FORM=true'
+    volumes:
+      - './monitoring/grafana/provisioning:/etc/grafana/provisioning'
